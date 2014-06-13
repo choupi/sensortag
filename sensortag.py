@@ -29,6 +29,8 @@ from sensor_calcs import *
 import json
 import select
 import threading
+import sqlite3
+import datetime
 
 HCIBIN='./'
 
@@ -41,10 +43,13 @@ def floatfromhex(h):
 
 class SensorTag(threading.Thread):
 
-    def __init__( self, bluetooth_adr ):
+    def __init__( self, bluetooth_adr, dbfile ):
         threading.Thread.__init__(self)
         #self.connect(bluetooth_adr)
         self.con = None
+        self.db = None
+        self.dbfile=dbfile
+        self.addr = bluetooth_adr
         self.cb = {}
         self.data = {}
         self.barometer = None
@@ -53,14 +58,19 @@ class SensorTag(threading.Thread):
         self.enable=True
         return
 
+    def __del__(self):
+        if self.con: self.con.kill(9)
+        threading.Thread.__del__(self)
+
     def run(self):
         self.connect(self.data['addr'])
+        self.db = sqlite3.connect(self.dbfile)
         self.init_cb()
         self.notification_loop()
 
     def connect(self, bluetooth_adr):
         self.con = pexpect.spawn(HCIBIN+'gatttool -b ' + bluetooth_adr + ' --interactive')
-        self.con.expect('\[LE\]>', timeout=600)
+        self.con.expect('\[LE\]>', timeout=60)
         print "Preparing to connect. You might need to press the side button..."
         self.con.sendline('connect')
         # test for success of connect
@@ -155,11 +165,16 @@ class SensorTag(threading.Thread):
         ambT = (v[3]<<8)+v[2]
         targetT = calcTmpTarget(objT, ambT)
         self.data['t006'] = targetT
+        self.db.execute('INSERT INTO SensorTagData VALUES(?,?,?,?,?)', ('fff',self.addr,datetime.datetime.now(),'T006',targetT))
+        self.db.commit()
         print "T006 %.1f" % targetT
 
     def accel(self,v):
         (xyz,mag) = calcAccel(v[0],v[1],v[2])
         self.data['accl'] = xyz
+        out=' '.join(map(str,xyz))
+        self.db.execute('INSERT INTO SensorTagData VALUES(?,?,?,?,?)', ('fff',self.addr,datetime.datetime.now(),'ACCL',out))
+        self.db.commit()
         print "ACCL", xyz
 
     def humidity(self, v):
@@ -167,6 +182,8 @@ class SensorTag(threading.Thread):
         rawH = (v[3]<<8)+v[2]
         (t, rh) = calcHum(rawT, rawH)
         self.data['humd'] = [t, rh]
+        self.db.execute('INSERT INTO SensorTagData VALUES(?,?,?,?,?)', ('fff',self.addr,datetime.datetime.now(),'HUMD',rh))
+        self.db.commit()
         print "HUMD %.1f" % rh
 
     def baro(self,v):
@@ -189,10 +206,20 @@ class SensorTag(threading.Thread):
         z = (v[5]<<8)+v[4]
         xyz = calcMagn(x, y, z)
         self.data['magn'] = xyz
+        out=' '.join(map(str,xyz))
+        self.db.execute('INSERT INTO SensorTagData VALUES(?,?,?,?,?)', ('fff',self.addr,datetime.datetime.now(),'MAGN',out))
+        self.db.commit()
         print "MAGN", xyz
 
     def gyro(self,v):
-        print "GYRO", v
+        x = (v[1]<<8)+v[0]
+        y = (v[3]<<8)+v[2]
+        z = (v[5]<<8)+v[4]
+        xyz = calcMagn(x, y, z)
+        out=' '.join(map(str,xyz))
+        self.db.execute('INSERT INTO SensorTagData VALUES(?,?,?,?,?)', ('fff',self.addr,datetime.datetime.now(),'GYRO',out))
+        self.db.commit()
+        print "GYRO", xyz
 
 def main():
     bluetooth_adr = sys.argv[1]
