@@ -59,7 +59,7 @@ class SensorTag(threading.Thread):
         return
 
     def __del__(self):
-        if self.con: self.con.kill(9)
+        self.disconnet()
         threading.Thread.__del__(self)
 
     def run(self):
@@ -67,6 +67,7 @@ class SensorTag(threading.Thread):
         self.db = sqlite3.connect(self.dbfile)
         self.init_cb()
         self.notification_loop()
+        self.disconnect()
 
     def connect(self, bluetooth_adr):
         self.con = pexpect.spawn(HCIBIN+'gatttool -b ' + bluetooth_adr + ' --interactive')
@@ -82,6 +83,9 @@ class SensorTag(threading.Thread):
         self.con.expect('\[CON\].*>')
         self.cb = {}
         return
+
+    def disconnect(self):
+        if self.con: self.con.kill(9)
 
     def char_write_cmd( self, handle, value ):
         # The 0%x for value is VERY naughty!  Fix this!
