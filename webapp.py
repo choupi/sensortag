@@ -30,7 +30,7 @@ def hello_world():
 @app.route('/threads')
 def countthread():
     ta = get_threads()
-    return str(len(ta))
+    return ' '.join([str(ta[t].ident) for t in ta])
 
 @app.route('/sensortag/start/<ble_addr>')
 def sensortag_start(ble_addr):
@@ -43,7 +43,9 @@ def sensortag_start(ble_addr):
 @app.route('/sensortag/stop/<ble_addr>')
 def sensortag_stop(ble_addr):
     ta = get_threads()
+    if ble_addr not in ta: return 'Not found'
     ta[ble_addr].enable=False
+    ta[ble_addr].join()
     return ble_addr
 
 if __name__ == '__main__':
