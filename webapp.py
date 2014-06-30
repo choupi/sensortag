@@ -32,6 +32,36 @@ def countthread():
     ta = get_threads()
     return ' '.join([str(ta[t].ident) for t in ta])
 
+@app.route('/datas')
+def newdatas():
+    db=get_db()
+    cur=db.cursor()
+    cur.execute('SELECT ts,handle,data FROM SensorTagData ORDER BY ts DESC LIMIT 1')
+    r=cur.fetchone()
+    return r
+
+@app.route('/data/ACCL')
+def get_data_3d():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('ACCL'))
+    for r in cur.fetchall():
+        rl=map(math.fabs,map(float,r[0].split()))
+        for i in xrange(0,3): dataA[i].append(rl[i])
+    return json.dumps({'data':dataA})
+
+@app.route('/data/TMHM')
+def get_data_TMHM():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('T006'))
+    dataT=[]
+    for r in cur.fetchall():
+        dataT.append(float(r[0]))
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('HUMD'))
+    dataH=[]
+    for r in cur.fetchall():
+        dataH.append(float(r[0]))
+    return json.dumps({'dataT':dataT, 'dataH':dataH})
+
 @app.route('/sensortag/start/<ble_addr>')
 def sensortag_start(ble_addr):
     ta = get_threads()
