@@ -1,0 +1,56 @@
+<html>
+<meta charset="utf-8">
+<script src="d3.min.js"></script>
+<body>
+<div id='chartArea'></div>
+<script>
+// Drawing the data
+var h = 250;
+var w = 800;
+var chart = d3.selectAll('#chartArea')
+    .append('svg');
+
+d3.json('../data/ACCL', function(error, dataAll) {
+
+var dataT = d3.transpose(dataAll.data);
+//var dateT = dataAll.ts;
+var groups = dataT.length;
+var x = d3.scale.linear()
+    .domain([0, dataT.length])
+    .rangeRound([0, w]);
+var y = d3.scale.linear()
+    .domain([0, 2])
+    .rangeRound([0, h]);
+var groupColor = d3.scale.category10()
+var xAxis = d3.svg.axis()
+    .scale(x)
+	.orient("bottom");
+
+var moment = chart.selectAll('g')
+    .data(dataT)
+    .enter()
+    .append('g')
+    .attr('transform', function (d, i) {
+    return 'translate(' + x(i) + ', 0)';
+});
+
+
+moment.selectAll('rect')
+    .data(function (d) {return d;}) //here we are binding the month list to children 
+    .enter()
+    .append('rect')
+    .attr('x', function (d, i) {return x(6*i / (groups+1));})
+    .attr('y', function (d) {return h - y(d);})
+    .attr('width', function () {return x(6 / (groups+1));})
+    .attr('height', function (d) {return y(d);})
+    .attr('fill', function (d, i) {return groupColor(i);});
+
+/*chart.append("g")
+	.attr("transform", "translate(0," + h + ")")
+	.call(xAxis);
+*/	
+});
+</script>
+</body>
+</html>
+

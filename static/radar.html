@@ -1,0 +1,14 @@
+<html>
+<meta charset="utf-8">
+<script src="d3.min.js"></script>
+<script src="radar-chart-min.js"></script>
+<body>
+<div id='RadarChart'></div>
+<script>
+d3.json('radar.json', function(error, d) {
+   var mcfg= { h:350, w:350, factorLegend:0.8 };
+   RadarChart.draw("#RadarChart", d, mcfg);
+});
+</script>
+</body>
+</html>

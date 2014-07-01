@@ -1,0 +1,111 @@
+<html>
+<meta charset="utf-8">
+<script src="d3.min.js"></script>
+<style>
+			/* tell the SVG path to be a thin blue line without any area fill */
+			path {
+				stroke-width: 1;
+				fill: none;
+			}
+			
+			.data1 {
+				stroke: steelblue;
+			}
+
+			.data2 {
+				stroke: orange;
+			}
+
+			.axis {
+			  shape-rendering: crispEdges;
+			}
+
+			.x.axis line {
+			  stroke: lightgrey;
+			}
+
+			.x.axis .minor {
+			  stroke-opacity: .5;
+			}
+
+			.x.axis path {
+			  display: none;
+			}
+			
+			.x.axis text {
+				font-size: 14;
+			}
+
+			.y.axis line, .y.axis path {
+			  fill: none;
+			  stroke: #000;
+			}
+
+			.y.axis text {
+				font-size: 14;
+			}
+
+			.y.axisRight text {
+				fill: orange;
+			}
+			
+			.y.axisLeft text {
+				fill: steelblue;
+			}
+		</style>
+<body>
+<div id='chartArea'></div>
+<script>
+d3.json('../data/TMHM', function(error, dataAll) {
+// Drawing the data
+//var data1=[21.6821906491862, 23.7144707668243, 22.4388284878586, 22.8853949888243, 22.1557586912808, 22.2029925455942, 22.6270987249717, 22.6741111390691, 22.9439910219238, 25.0546714036831, 22.6153076271585, 23.1313283756008, 23.014283457806, 23.3066591547645, 22.6505550589867, 22.2028868571464, 24.1671439089153, 24.0512905608913, 22.967436641406, 23.0611381483095];
+//var data2=[48.656982421875, 48.4204711914063, 48.290771484375, 48.1229248046875, 47.8864135742188, 47.7567138671875, 47.6880493164063, 47.5888671875, 47.5888671875, 47.5888671875, 47.8253784179688, 48.4204711914063, 48.962158203125, 49.2597045898438, 49.328369140625, 49.1910400390625, 49.023193359375, 49.023193359375, 48.962158203125, 48.7943115234375];
+var data1=dataAll.dataT;
+var data2=dataAll.dataH;
+
+var m = [80, 80, 80, 80];
+var h = 250;
+var w = 800;
+var chart = d3.selectAll('#chartArea')
+
+var x = d3.scale.linear().domain([0, data1.length]).range([0, w]);
+var y1 = d3.scale.linear().domain([0, 40]).range([h, 0]);
+var y2 = d3.scale.linear().domain([0, 80]).range([h, 0]);
+
+var line1 = d3.svg.line()
+	.x(function(d,i) { return x(i); })
+	.y(function(d) { return y1(d); })
+var line2 = d3.svg.line()
+	.x(function(d,i) { return x(i); })
+	.y(function(d) { return y2(d); })
+
+var graph = d3.select("#chartArea").append("svg:svg")
+	.attr("width", w+120)
+	.attr("height", h+120)
+	.append("svg:g")
+	.attr("transform", "translate(60,60)");
+
+var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true);
+graph.append("svg:g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + h + ")")
+    .call(xAxis);
+
+var yAxisLeft = d3.svg.axis().scale(y1).ticks(4).orient("left");
+graph.append("svg:g")
+    .attr("class", "y axis axisLeft")
+    .attr("transform", "translate(0,0)")
+    .call(yAxisLeft);
+
+var yAxisRight = d3.svg.axis().scale(y2).ticks(6).orient("right");
+graph.append("svg:g")
+    .attr("class", "y axis axisRight")
+    .attr("transform", "translate("+ (w+15) +",0)")
+    .call(yAxisRight);
+
+graph.append("svg:path").attr("d", line1(data1)).attr("class", "data1");
+graph.append("svg:path").attr("d", line2(data2)).attr("class", "data2");
+});
+</script>
+</body>
+</html>
