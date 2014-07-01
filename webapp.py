@@ -6,7 +6,9 @@ from flask import g
 from threading import Thread
 import sensortag
 import time
+import math
 import sqlite3
+import json
 
 global app_data
 
@@ -41,26 +43,27 @@ def newdatas():
     return r
 
 @app.route('/data/ACCL')
-def get_data_3d():
+def get_data_ACCL():
     cur=get_db().cursor()
-    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('ACCL'))
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('ACCL'))
+    dataA=[[],[],[]]
     for r in cur.fetchall():
         rl=map(math.fabs,map(float,r[0].split()))
         for i in xrange(0,3): dataA[i].append(rl[i])
-    return json.dumps({'data':dataA})
+    return json.dumps({'data':reversed(dataA)})
 
 @app.route('/data/TMHM')
 def get_data_TMHM():
     cur=get_db().cursor()
-    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('T006'))
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('T006'))
     dataT=[]
     for r in cur.fetchall():
         dataT.append(float(r[0]))
-    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY LIMIT 20'%('HUMD'))
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('HUMD'))
     dataH=[]
     for r in cur.fetchall():
         dataH.append(float(r[0]))
-    return json.dumps({'dataT':dataT, 'dataH':dataH})
+    return json.dumps({'dataT':reversed(dataT), 'dataH':reversed(dataH)})
 
 @app.route('/sensortag/start/<ble_addr>')
 def sensortag_start(ble_addr):
