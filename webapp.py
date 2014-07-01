@@ -50,7 +50,8 @@ def get_data_ACCL():
     for r in cur.fetchall():
         rl=map(math.fabs,map(float,r[0].split()))
         for i in xrange(0,3): dataA[i].append(rl[i])
-    return json.dumps({'data':reversed(dataA)})
+    dataA.reverse()
+    return json.dumps({'data':dataA})
 
 @app.route('/data/TMHM')
 def get_data_TMHM():
@@ -63,7 +64,9 @@ def get_data_TMHM():
     dataH=[]
     for r in cur.fetchall():
         dataH.append(float(r[0]))
-    return json.dumps({'dataT':reversed(dataT), 'dataH':reversed(dataH)})
+    dataT.reverse()
+    dataH.reverse()
+    return json.dumps({'dataT':dataT, 'dataH':dataH})
 
 @app.route('/sensortag/start/<ble_addr>')
 def sensortag_start(ble_addr):
