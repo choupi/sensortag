@@ -10,7 +10,7 @@ var w = 800;
 var chart = d3.selectAll('#chartArea')
     .append('svg');
 
-d3.json('../data/ACCL', function(error, dataAll) {
+d3.json('/data/ACCL', function(error, dataAll) {
 
 var dataT = d3.transpose(dataAll.data);
 //var dateT = dataAll.ts;

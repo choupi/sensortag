@@ -5,7 +5,7 @@
 <body>
 <div id='RadarChart'></div>
 <script>
-d3.json('radar.json', function(error, d) {
+d3.json('/data/RADAR', function(error, d) {
    var mcfg= { h:350, w:350, factorLegend:0.8 };
    RadarChart.draw("#RadarChart", d, mcfg);
 });
