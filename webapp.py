@@ -25,6 +25,50 @@ def get_db():
         db = g._database = sqlite3.connect(app_data['dbfile'])
     return db
 
+def check_env():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('T006'))
+    dataT=[r[0] for r in cur.fetchall() if float(r[0])>30 or float(r[0])<22]
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('HUMD'))
+    dataT+=[r[0] for r in cur.fetchall() if float(r[0])>80 or float(r[0])<40]
+    return 15-len(dataT)
+
+def check_brake():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('ACCL'))
+    dataT=[]
+    for r in cur.fetchall():
+        sr=r[0].strip().split()
+        if float(sr[0])>1.0: dataT.append(sr[0])
+    return 15-len(dataT)
+
+def check_startoff():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('ACCL'))
+    dataT=[]
+    for r in cur.fetchall():
+        sr=r[0].strip().split()
+        if float(sr[0])<1.0: dataT.append(sr[0])
+    return 15-len(dataT)
+
+def check_turn():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('ACCL'))
+    dataT=[]
+    for r in cur.fetchall():
+        sr=r[0].strip().split()
+        if math.fabs(float(sr[1]))>1.0: dataT.append(sr[1])
+    return 15-len(dataT)
+
+def check_road():
+    cur=get_db().cursor()
+    cur.execute('SELECT data FROM SensorTagData WHERE handle="%s" ORDER BY ts DESC LIMIT 20'%('ACCL'))
+    dataT=[]
+    for r in cur.fetchall():
+        sr=r[0].strip().split()
+        if math.fabs(float(sr[2]))>1.0: dataT.append(sr[2])
+    return 15-len(dataT)
+
 @app.route('/')
 def hello_world():
     return 'Hello World!'
@@ -41,6 +85,16 @@ def newdatas():
     cur.execute('SELECT ts,handle,data FROM SensorTagData ORDER BY ts DESC LIMIT 1')
     r=cur.fetchone()
     return r
+
+@app.route('/data/RADAR')
+def get_data_radar():
+    dataR=[[{"axis":"environment", "value": check_env()}, 
+        {"axis":"brake", "value": check_brake()},
+        {"axis":"start off", "value": check_startoff()}, 
+        {"axis":"road quality", "value": check_road()},
+        {"axis":"turning", "value": check_turn()}
+    ]]
+    return json.dumps(dataR)
 
 @app.route('/data/ACCL')
 def get_data_ACCL():
