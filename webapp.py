@@ -84,7 +84,7 @@ def newdatas():
     cur=db.cursor()
     cur.execute('SELECT ts,handle,data FROM SensorTagData ORDER BY ts DESC LIMIT 1')
     r=cur.fetchone()
-    return r
+    return str(r)
 
 @app.route('/data/RADAR')
 def get_data_radar():
